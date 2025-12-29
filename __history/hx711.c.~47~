@@ -1,0 +1,76 @@
+#include <16F877A.h>
+
+#fuses XT, NOWDT, NOPROTECT, NOBROWNOUT, NOLVP, NOPUT, NOWRT, NODEBUG, NOCPD
+#use delay(clock = 2 MHz)
+#define DT1 pin_c0
+#define SCK pin_c1
+#define RESET_BTN PIN_A0
+#define use_portb_lcd TRUE
+#include <lcd.c>
+
+float SCALE = 36;
+
+unsigned int32 readCount(void) {
+   unsigned int32 data;
+   unsigned int8 j;
+   output_bit(DT1, 1);
+   output_bit(SCK, 0);
+   data = 0;
+
+   while (input(DT1));
+   for (j = 0; j < 24; j++) {
+      output_bit(SCK, 1);
+      data = data << 1;
+      output_bit(SCK, 0);
+      if (input(DT1)) {
+         data++;
+      }
+   }
+   output_bit(SCK, 1);
+   data = data ^ 0x800000;
+   output_bit(SCK, 0);
+   return data;
+}
+
+int32 readAverage(void) {
+   unsigned int32 sum = 0;
+   for (int k = 0; k < 10; k++) {
+      sum = sum + readCount();
+   }
+   return sum / 10;
+}
+
+void main() {
+   setup_adc_ports(NO_ANALOGS);
+   setup_adc(ADC_OFF);
+   set_tris_a(0x01);   // RA0 la input
+   lcd_init();
+   printf(lcd_putc, "\f Loading..");
+   delay_ms(500);
+
+   unsigned int32 offset = readAverage();
+   float gram;
+
+   while (TRUE) {
+      // N?u nh?n nút thì c?p nh?t offset
+      if (input(RESET_BTN) == 0) {
+         delay_ms(5);
+         if (input(RESET_BTN) == 0) {
+            offset = readAverage();
+            delay_ms(50);
+         }
+      }
+   
+      unsigned int32 read1 = readAverage();
+      signed int32 delta = (signed int32)read1 - (signed int32)offset;
+      
+      if (delta < 0) delta = 0;
+      
+      float value = (float)delta / SCALE;   // value là gram
+      printf(lcd_putc, "\f%.0f g", value);
+
+      delay_ms(300);
+   }
+
+}
+

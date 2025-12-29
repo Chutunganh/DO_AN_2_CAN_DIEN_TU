@@ -1,0 +1,139 @@
+#include <16F877A.h>
+#fuses XT, NOWDT, NOPROTECT, NOBROWNOUT, NOLVP, NOPUT, NOWRT, NODEBUG, NOCPD
+#use delay(clock = 2 MHz)
+#define DT1 pin_c0
+#define SCK pin_c1
+#define RESET_BTN PIN_A0
+#define ONOFF_BTN PIN_A1
+#define use_portb_lcd TRUE
+#include <lcd.c>
+
+float SCALE = 36;
+int1 system_on = TRUE;  // Bi?n tr?ng thái h? th?ng
+
+unsigned int32 readCount(void) {
+   unsigned int32 data;
+   unsigned int8 j;
+   output_bit(DT1, 1);
+   output_bit(SCK, 0);
+   data = 0;
+   while (input(DT1));
+   for (j = 0; j < 24; j++) {
+      output_bit(SCK, 1);
+      data = data << 1;
+      output_bit(SCK, 0);
+      if (input(DT1)) {
+         data++;
+      }
+   }
+   output_bit(SCK, 1);
+   data = data ^ 0x800000;
+   output_bit(SCK, 0);
+   return data;
+}
+
+int32 readAverage(void) {
+   unsigned int32 sum = 0;
+   for (int k = 0; k < 10; k++) {
+      sum = sum + readCount();
+   }
+   return sum / 10;
+}
+
+void main() {
+   setup_adc_ports(NO_ANALOGS);
+   setup_adc(ADC_OFF);
+   set_tris_a(0x03);   // RA0 và RA1 là input
+   lcd_init();
+   
+   // Hi?n th? Loading
+   printf(lcd_putc, "\f  Loading");
+   delay_ms(500);
+   printf(lcd_putc, "\f  Loading.");
+   delay_ms(500);
+   printf(lcd_putc, "\f  Loading..");
+   delay_ms(500);
+   printf(lcd_putc, "\f  Loading...");
+   delay_ms(500);
+   
+   // Xóa màn hình và hi?n th? tên t? t?
+   printf(lcd_putc, "\f");
+   delay_ms(300);
+   
+   // Hi?n th? "Chu Tung Anh" t?ng ký t?
+   char name1[] = "Chu Tung Anh";
+   lcd_gotoxy(3, 1);
+   for(int8 i = 0; name1[i] != '\0'; i++) {
+      lcd_putc(name1[i]);
+      delay_ms(150);
+   }
+   delay_ms(800);
+   
+   // Hi?n th? "Can dien tu" t?ng ký t?
+   char name2[] = "Can dien tu";
+   lcd_gotoxy(3, 2);
+   for(int8 i = 0; name2[i] != '\0'; i++) {
+      lcd_putc(name2[i]);
+      delay_ms(150);
+   }
+   delay_ms(1500);
+   
+   // Ð?c giá tr? offset
+   unsigned int32 offset = readAverage();
+   
+   printf(lcd_putc, "\f   San sang!");
+   delay_ms(1000);
+   
+   float gram;
+   while (TRUE) {
+      // X? lý nút ON/OFF
+      if (input(ONOFF_BTN) == 0) {
+         delay_ms(20);  // Ch?ng d?i
+         if (input(ONOFF_BTN) == 0) {
+            system_on = !system_on;  // Ð?o tr?ng thái
+            
+            if (system_on) {
+               // B?t l?i LCD
+               lcd_init();
+               printf(lcd_putc, "\f   He thong ON");
+               delay_ms(1000);
+            } else {
+               // T?t LCD hoàn toàn
+               printf(lcd_putc, "\f");  // Xóa màn hình
+               output_low(PIN_E2);      // T?t backlight (n?u có)
+               lcd_putc('\f');          // Clear display
+               lcd_putc(0x08);          // Display OFF command
+            }
+            
+            while(input(ONOFF_BTN) == 0);  // Ð?i th? nút
+            delay_ms(50);
+         }
+      }
+      
+      // N?u h? th?ng dang OFF thì không làm gì
+      if (!system_on) {
+         continue;
+      }
+      
+      // N?u nh?n nút RESET thì c?p nh?t offset
+      if (input(RESET_BTN) == 0) {
+         delay_ms(20);
+         if (input(RESET_BTN) == 0) {
+            offset = readAverage();
+            printf(lcd_putc, "\fDa reset can!");
+            delay_ms(500);
+            while(input(RESET_BTN) == 0);  // Ð?i th? nút
+            delay_ms(50);
+         }
+      }
+   
+      unsigned int32 read1 = readAverage();
+      signed int32 delta = (signed int32)read1 - (signed int32)offset;
+      
+      if (delta < 0) delta = 0;
+      
+      float value = (float)delta / SCALE;
+      printf(lcd_putc, "\f%.0f g", value);
+      delay_ms(100);
+   }
+}

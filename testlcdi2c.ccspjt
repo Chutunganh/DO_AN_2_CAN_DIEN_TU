@@ -1,0 +1,57 @@
+[PROJECT]
+Target=testlcdi2c.hex
+Processor_Text=PIC16F877A
+CCSVerions=5.109
+Compiler=PCM
+CCSVersion=5.109
+[Target Data]
+FileList=testlcdi2c.c
+[Directories]
+Include=
+[D:\LTVDK\Baitap\Code\vidieukhienbaocao\testlcdi2c]
+Type=4
+[mru-list]
+1=testlcdi2c.c
+
+[fileformats]
+forcecoff=0
+
+[ProjectLog]
+Days=2
+D1=15-12-2025
+D1_L=8
+D1_L1=[55833]Project Opened.
+D1_L2=[55835]Started Editing.
+D1_L3=[56135]Stopped Editing.
+D1_L4=[56399]Started Editing.
+D1_L5=[56701]Stopped Editing.
+D1_L6=[56940]Started Editing.
+D1_L7=[57240]Stopped Editing.
+TotalEdit=6
+TotalDebug=0
+D1_E=1
+D1_D=0
+D1_L8=[57301]Project Closed.
+D2=16-12-2025
+D2_L=6
+D2_L1=[57362]Project Opened.
+D2_L2=[57399]Project Closed.
+D2_L3=[79751]Project Opened.
+D2_L4=[79755]Started Editing.
+D2_L5=[80009]Stopped Editing.
+D2_E=5
+D2_D=0
+D2_L6=[80009]Project Closed.
+
+[Opened Files]
+1=testlcdi2c.c
+t1=1
+Count=1
+[testlcdi2c.c]
+Type=4
+
+[defines]
+buildcount=5
+[Units]
+Count=1
+1=testlcdi2c (main)

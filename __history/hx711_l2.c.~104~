@@ -1,0 +1,405 @@
+#include <16f877a.h>
+#include <def_877a.h>
+#device *=16 ADC=8
+#FUSES NOWDT, HS, NOPUT, NODEBUG, NOBROWNOUT, NOLVP, NOCPD, NOWRT
+#use delay(clock = 20MHz)
+
+#define DT1        PIN_C0
+#define SCK        PIN_C1
+#define RESET_BTN  PIN_A0
+#define ONOFF_BTN  PIN_A1
+#define LCD_POWER  PIN_A2
+
+#use i2c(MASTER, SDA=PIN_C4, SCL=PIN_C3, stream=I2C_LCD, FAST)
+#include <I2C_LCD.c>
+
+float SCALE = 880.0;   
+int1 system_on = TRUE;
+
+// -------- B? d?m l?c trung v? (Median Filter) --------
+#define FILTER_SIZE 5
+unsigned int32 filter_buffer[FILTER_SIZE];
+int8 filter_index = 0;
+
+// S?p x?p bubble sort cho median filter
+void sortBuffer(unsigned int32 *arr, int8 n) {
+   int8 i, j;
+   unsigned int32 temp;
+   for (i = 0; i < n-1; i++) {
+      for (j = 0; j < n-i-1; j++) {
+         if (arr[j] > arr[j+1]) {
+            temp = arr[j];
+            arr[j] = arr[j+1];
+            arr[j+1] = temp;
+         }
+      }
+   }
+}
+
+unsigned int32 medianFilter(unsigned int32 newValue) {
+   unsigned int32 sorted[FILTER_SIZE];
+   int8 i;
+   
+   // Thêm giá tr? m?i vào buffer
+   filter_buffer[filter_index] = newValue;
+   filter_index++;
+   if (filter_index >= FILTER_SIZE) filter_index = 0;
+   
+   // Copy sang m?ng sorted
+   for (i = 0; i < FILTER_SIZE; i++) {
+      sorted[i] = filter_buffer[i];
+   }
+   
+   // S?p x?p và l?y giá tr? gi?a
+   sortBuffer(sorted, FILTER_SIZE);
+   return sorted[FILTER_SIZE / 2];  // Tr? v? median
+}
+
+// -------- B? l?c trung bình d?ng (Moving Average) --------
+#define AVG_SIZE 8
+float avg_buffer[AVG_SIZE];
+int8 avg_index = 0;
+int8 avg_count = 0;
+
+float movingAverage(float newValue) {
+   float sum = 0;
+   int8 i;
+   
+   avg_buffer[avg_index] = newValue;
+   avg_index++;
+   if (avg_index >= AVG_SIZE) avg_index = 0;
+   
+   if (avg_count < AVG_SIZE) avg_count++;
+   
+   for (i = 0; i < avg_count; i++) {
+      sum += avg_buffer[i];
+   }
+   
+   return sum / avg_count;
+}
+
+// -------- Ð?c HX711 v?i b? l?c nhi?u --------
+unsigned int32 readCount(void) {
+   unsigned int32 data = 0;
+   unsigned int8 j;
+   output_bit(DT1, 1);
+   output_bit(SCK, 0);
+   
+   // Timeout d? tránh treo
+   unsigned int16 timeout = 0;
+   while (input(DT1)) {
+      timeout++;
+      if (timeout > 10000) return 0;
+   }
+   
+   for (j = 0; j < 24; j++) {
+      output_bit(SCK, 1);
+      data = data << 1;
+      output_bit(SCK, 0);
+      if (input(DT1)) data++;
+   }
+   output_bit(SCK, 1);
+   data = data ^ 0x800000;
+   output_bit(SCK, 0);
+   return data;
+}
+
+// Ð?c nhi?u l?n và lo?i b? giá tr? ngo?i lai
+int32 readStable(void) {
+   unsigned int32 readings[10];
+   unsigned int32 sum = 0;
+   unsigned int32 min_val = 0xFFFFFFFF;
+   unsigned int32 max_val = 0;
+   int8 k;
+   
+   // Ð?c 10 l?n
+   for (k = 0; k < 10; k++) {
+      readings[k] = readCount();
+      if (readings[k] == 0) continue;  // B? qua l?i timeout
+      
+      sum += readings[k];
+      if (readings[k] < min_val) min_val = readings[k];
+      if (readings[k] > max_val) max_val = readings[k];
+      delay_ms(5);
+   }
+   
+   // Lo?i b? min và max, l?y trung bình 8 giá tr? còn l?i
+   sum = sum - min_val - max_val;
+   return sum / 8;
+}
+
+// -------- Kh?i t?o b? d?m --------
+void initFilters(void) {
+   int8 i;
+   for (i = 0; i < FILTER_SIZE; i++) {
+      filter_buffer[i] = 0;
+   }
+   for (i = 0; i < AVG_SIZE; i++) {
+      avg_buffer[i] = 0.0;
+   }
+   filter_index = 0;
+   avg_index = 0;
+   avg_count = 0;
+}
+
+// -------------------------------------
+
+void main() {
+   setup_adc_ports(NO_ANALOGS);
+   setup_adc(ADC_OFF);
+   set_tris_a(0x03);
+   
+   output_high(LCD_POWER);
+   delay_ms(200);
+   
+   LCD_Begin(0x4E);
+   delay_ms(100);
+   
+   // Màn hình kh?i d?ng
+   LCD_Goto(3,1); printf(LCD_Out, "Loading");
+   delay_ms(400);
+   LCD_Goto(3,1); printf(LCD_Out, "Loading.");
+   delay_ms(400);
+   LCD_Goto(3,1); printf(LCD_Out, "Loading..");
+   delay_ms(400);
+   LCD_Goto(3,1); printf(LCD_Out, "Loading...");
+   delay_ms(400);
+
+   {
+      char name1[] = "Chu Tung Anh";
+      int8 i;
+      LCD_Goto(3,1);
+      for (i = 0; name1[i] != '\0'; i++) {
+         LCD_Out(name1[i]);
+         delay_ms(120);
+      }
+      delay_ms(500);
+
+      char name2[] = "Can dien tu";
+      LCD_Goto(3,2);
+      for (i = 0; name2[i] != '\0'; i++) {
+         LCD_Out(name2[i]);
+         delay_ms(120);
+      }
+      delay_ms(1000);
+   }
+
+   // Kh?i t?o b? l?c
+   initFilters();
+   
+   // CH? HX711 ?N Ð?NH tru?c khi d?c offset
+   delay_ms(500);
+   
+   // Ð?c offset nhi?u l?n d? chính xác hon
+   unsigned int32 offset_sum = 0;
+   int8 offset_reads = 20;  // Ð?c 20 l?n
+   for (k = 0; k < offset_reads; k++) {
+      offset_sum += readStable();
+      delay_ms(50);
+   }
+   unsigned int32 offset = offset_sum / offset_reads;
+   
+   // N?p buffer v?i giá tr? offset
+   for (k = 0; k < FILTER_SIZE; k++) {
+      filter_buffer[k] = offset;
+   }
+   
+   // N?p moving average buffer cung v? 0
+   for (k = 0; k < AVG_SIZE; k++) {
+      avg_buffer[k] = 0.0;
+   }
+
+   LCD_Goto(1,1); 
+   printf(LCD_Out, "                  "); 
+   LCD_Goto(1,2); 
+   printf(LCD_Out, "                  "); 
+   LCD_Goto(1,1); 
+   printf(LCD_Out, "  San sang!");
+   delay_ms(1000);
+   
+   // Xóa màn hình và hi?n th? layout
+   LCD_Goto(1,1);
+   printf(LCD_Out,"                    ");
+   LCD_Goto(1,2);
+   printf(LCD_Out,"                    ");
+   
+   // FORCE HI?N TH? CÙNG DÒNG: "CAN NANG:  0.0 g"
+   LCD_Goto(1,1);
+   printf(LCD_Out,"CAN NANG:  0.0 g");
+   
+   float last_grams = 0.0;
+   float stable_grams = 0.0;
+   int8 zero_count = 8;          // B?T Ð?U ? TR?NG THÁI KHÓA
+   int8 weight_count = 0;
+   int1 locked_at_zero = TRUE;
+
+   while(TRUE) {
+   
+       /* ===== NÚT ON/OFF ===== */
+       if (!input(ONOFF_BTN)) {
+           delay_ms(30);
+           if (!input(ONOFF_BTN)) {
+               system_on = !system_on;
+   
+               if (system_on) {
+                   output_high(LCD_POWER);
+                   delay_ms(150);
+                   LCD_Begin(0x4E);
+                   
+                   // CH? ?N Ð?NH
+                   delay_ms(500);
+                   
+                   initFilters();
+                   
+                   // Ð?c offset nhi?u l?n
+                   unsigned int32 offset_sum = 0;
+                   for (k = 0; k < 20; k++) {
+                      offset_sum += readStable();
+                      delay_ms(50);
+                   }
+                   offset = offset_sum / 20;
+                   
+                   for (k = 0; k < FILTER_SIZE; k++) {
+                      filter_buffer[k] = offset;
+                   }
+                   for (k = 0; k < AVG_SIZE; k++) {
+                      avg_buffer[k] = 0.0;
+                   }
+                   
+                   LCD_Goto(1,1);
+                   printf(LCD_Out,"                    ");
+                   LCD_Goto(1,2);
+                   printf(LCD_Out,"                    ");
+                   LCD_Goto(1,1);
+                   printf(LCD_Out,"CAN NANG:  0.0 g");
+                   
+                   zero_count = 8;
+                   weight_count = 0;
+                   locked_at_zero = TRUE;
+               } else {
+                   output_low(LCD_POWER);
+               }
+   
+               while (!input(ONOFF_BTN));
+               delay_ms(50);
+           }
+       }
+   
+       if (!system_on) {
+           delay_ms(100);
+           continue;
+       }
+   
+       /* ===== NÚT RESET (TARE) ===== */
+       if (!input(RESET_BTN)) {
+           delay_ms(30);
+           if (!input(RESET_BTN)) {
+               // CH? ?N Ð?NH
+               delay_ms(300);
+               
+               initFilters();
+               
+               // Ð?c offset m?i nhi?u l?n
+               unsigned int32 offset_sum = 0;
+               for (k = 0; k < 20; k++) {
+                  offset_sum += readStable();
+                  delay_ms(50);
+               }
+               offset = offset_sum / 20;
+               
+               for (k = 0; k < FILTER_SIZE; k++) {
+                  filter_buffer[k] = offset;
+               }
+               for (k = 0; k < AVG_SIZE; k++) {
+                  avg_buffer[k] = 0.0;
+               }
+               
+               last_grams = 0.0;
+               stable_grams = 0.0;
+               zero_count = 8;
+               weight_count = 0;
+               locked_at_zero = TRUE;
+               
+               LCD_Goto(1,1);
+               printf(LCD_Out,"                    ");
+               LCD_Goto(1,1);
+               printf(LCD_Out,"CAN NANG:  0.0 g");
+               
+               while (!input(RESET_BTN));
+               delay_ms(50);
+           }
+       }
+   
+       /* ===== Ð?C CÂN V?I B? L?C ===== */
+       unsigned int32 raw = readStable();
+       
+       // Áp d?ng median filter d? lo?i nhi?u xung
+       unsigned int32 filtered_raw = medianFilter(raw);
+       
+       signed int32 delta = (signed int32)filtered_raw - (signed int32)offset;
+       if (delta < 0) delta = 0;
+   
+       float grams = (float)delta / SCALE;
+       
+       // Áp d?ng moving average d? làm mu?t
+       float smoothed_grams = movingAverage(grams);
+       
+       /* ===== CO CH? KHÓA S? 0 THÔNG MINH - CH?NG NHI?U ===== */
+       
+       // N?u giá tr? < 1.5g, xem nhu là nhi?u ho?c không có gì
+       if (smoothed_grams < 1.5) {
+           zero_count++;
+           weight_count = 0;  // Reset b? d?m tr?ng lu?ng
+           
+           // N?u liên t?c < 1.5g trong 8 l?n d?c -> khóa ch?c ch?n t?i 0
+           if (zero_count >= 8) {
+               locked_at_zero = TRUE;
+               zero_count = 8;  // Gi? ? m?c t?i da
+           }
+       } 
+       else if (smoothed_grams >= 3.0) {
+           // Ph?i d?c liên t?c >= 3.0g trong 8 l?n m?i m? khóa
+           weight_count++;
+           zero_count = 0;  // Reset b? d?m zero
+           
+           if (weight_count >= 8) {
+               locked_at_zero = FALSE;
+               weight_count = 8;  // Gi? ? m?c t?i da
+           }
+       }
+       else {
+           // Vùng 1.5g - 3.0g: vùng không ch?c ch?n, gi? nguyên tr?ng thái
+           // Không tang counter nào c?
+       }
+       
+       // N?u dang khóa t?i 0, force v? 0
+       if (locked_at_zero) {
+           smoothed_grams = 0.0;
+       }
+       
+       // Ngu?ng ch?t b? sung
+       if (smoothed_grams < 0.8) smoothed_grams = 0.0;
+       
+       // Làm tròn 0.1g
+       smoothed_grams = ((int)(smoothed_grams * 10 + 0.5)) / 10.0;
+       
+       // Ch? c?p nh?t n?u thay d?i >= 0.3g (tang ngu?ng khi ? vùng th?p)
+       float diff = smoothed_grams - stable_grams;
+       if (diff < 0) diff = -diff;
+       
+       // Ngu?ng d?ng: ch?t hon khi g?n 0, l?ng hon khi có tr?ng lu?ng
+       float threshold = (stable_grams < 5.0) ? 0.5 : 0.3;
+       
+       if (diff >= threshold) {
+           stable_grams = smoothed_grams;
+           
+           // C?P NH?T CÙNG DÒNG: ch? xóa ph?n s?, gi? "CAN NANG:"
+           LCD_Goto(11,1);  // V? trí b?t d?u s? (sau "CAN NANG: ")
+           printf(LCD_Out,"         ");  // Xóa vùng s? cu
+           LCD_Goto(11,1);
+           printf(LCD_Out,"%5.1f g", stable_grams);
+       }
+   
+       delay_ms(200);  // Gi?m t?c d? d?c d? ?n d?nh hon
+   }
+}

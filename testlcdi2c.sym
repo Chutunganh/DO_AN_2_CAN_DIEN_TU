@@ -1,0 +1,312 @@
+000     INDF
+001     TMR0
+002     PCL
+003     STATUS
+004     FSR
+004-005 @READ_PROGRAM_MEMORY8.P1
+004-005 @WRITE_PROGRAM_MEMORY8.P2
+005.0   ra0
+005     PORTA
+005.1   ra1
+005.2   ra2
+005.3   ra3
+005.4   ra4
+005.5   ra5
+006.0   rb0
+006     PORTB
+006.1   rb1
+006.2   rb2
+006.3   rb3
+006.4   rb4
+006.5   rb5
+006.6   rb6
+006.7   rb7
+007     PORTC
+007.0   rc0
+007.1   rc1
+007.2   rc2
+007.3   rc3
+007.4   rc4
+007.5   rc5
+007.6   rc6
+007.7   rc7
+008     PSP_DATA
+00A     PCLATH
+00B.0   rbif
+00B.1   intf
+00B.2   t0if
+00B.3   rbie
+00B.4   inte
+00B.5   t0ie
+00B.7   gie
+00C     PIR1
+00C.0   TMR1IF
+00C.1   TMR2IF
+00C.2   CCP1IF
+00C.3   SSPIF
+00C.4   TXIF
+00C.5   RCIF
+00C.6   ADIF
+00C.7   PSPIF
+00D     PIR2
+00D.0   CCP2IF
+00D.3   BCLIF
+00D.4   EEIF
+00D.6   CMIF
+00E     TMR1L
+00F     TMR1H
+010     T1CON
+010.0   TMR1ON
+010.1   TMR1CS
+010.2   T1SYNC
+010.3   T1OSCEN
+010.4   T1CKPS0
+010.5   T1CKPS1
+011     TMR2
+012.0   T2CKPS0
+012     T2CON
+012.1   T2CKPS1
+012.2   TMR2ON
+012.3   TOUTPS0
+012.4   TOUTPS1
+012.5   TOUTPS2
+012.6   TOUTPS3
+014.0   SSPM0
+014     SSPCON
+014.1   SSPM1
+014.2   SSPM2
+014.3   SSPM3
+014.4   CKP
+014.5   SSPEN
+014.6   SSPOV
+014.7   WCOL
+015     CCPR1L
+015     CCP_1_LOW
+015     CCP_1
+016     CCPR1H
+016     CCP_1_HIGH
+017     CCP1CON
+017.0   CCP1M0
+017.1   CCP1M1
+017.2   CCP1M2
+017.3   CCP1M3
+017.4   CCP1Y
+017.5   CCP1X
+018.0   RX9D
+018     RCSTA
+018.1   OERR
+018.2   FERR
+018.3   ADDEN
+018.4   CREN
+018.5   SREN
+018.6   RX9
+018.7   SPEN
+019     TXREG
+01A     RCREG
+01B     CCP_2_LOW
+01B     CCP_2
+01B     CCPR2L
+01C     CCPR2H
+01C     CCP_2_HIGH
+01D     CCP2CON
+01D.0   CCP2M0
+01D.1   CCP2M1
+01D.2   CCP2M2
+01D.3   CCP2M3
+01D.4   CCP2Y
+01D.5   CCP2X
+01E     ADRESH
+01F     ADCON0
+01F.0   ADON
+01F.2   ADGO
+01F.3   CHS0
+01F.4   CHS1
+01F.5   CHS2
+01F.6   ADCS0
+01F.7   ADCS1
+020     @TRIS_C
+021.0   RS
+022     i2c_addr
+023     backlight_val
+024-025 @sprintf_string
+026     LCD_Begin._i2c_addr
+026     LCD_Goto.col
+026     MAIN.@SCRATCH1
+026     @PSTRINGC7_932.@SCRATCH1
+027     @delay_ms1.P1
+027     LCD_Goto.row
+027     @PSTRINGC7_932.@SCRATCH2
+028     LCD_Goto.@SCRATCH1
+028     @PSTRINGC7_932.@SCRATCH3
+029     LCD_Out.LCD_Char
+029     LCD_Cmd.Command
+029     @PSTRINGC7_932.@SCRATCH4
+02A     LCD_Cmd.@SCRATCH1
+02A     LCD_Out.@SCRATCH1
+02B     LCD_Write_Nibble.n
+02C     LCD_Write_Nibble.@SCRATCH1
+02D     Expander_Write.value
+02E     Expander_Write.@SCRATCH1
+02F     @I2C_WRITEU_129.P1
+077     @SCRATCH
+078     @SCRATCH
+078     _RETURN_
+079     @SCRATCH
+07A     @SCRATCH
+081     OPTION_REG
+081.0   PS0
+081.1   PS1
+081.2   PS2
+081.3   PSA
+081.4   T0SE
+081.5   T0CS
+081.6   INTEDG
+081.7   RBPU
+085.0   TRISA0
+085     TRISA
+085.1   TRISA1
+085.2   TRISA2
+085.3   TRISA3
+085.4   TRISA4
+085.5   TRISA5
+086.0   TRISB0
+086     TRISB
+086.1   TRISB1
+086.2   TRISB2
+086.3   TRISB3
+086.4   TRISB4
+086.5   TRISB5
+086.6   TRISB6
+086.7   TRISB7
+087     TRISC
+087.0   TRISC0
+087.1   TRISC1
+087.2   TRISC2
+087.3   TRISC3
+087.4   TRISC4
+087.5   TRISC5
+087.6   TRISC6
+087.7   TRISC7
+08C     PIE1
+08C.0   TMR1IE
+08C.1   TMR2IE
+08C.2   CCP1IE
+08C.3   SSPIE
+08C.4   TXIE
+08C.5   RCIE
+08C.6   ADIE
+08C.7   PSPIE
+08D.0   CCP2IE
+08D     PIE2
+08D.3   BCLIE
+08D.4   eeie
+08D.6   CMIE
+08E     PCON
+08E.0   BOD
+08E.1   POR
+091.0   SEN
+091     SSPCON2
+091.1   RSEN
+091.2   PEN
+091.3   RCEN
+091.4   ACKEN
+091.5   ACKDT
+091.6   ACKSTAT
+091.7   GCEN
+092     PR2
+093     SSPADD
+094     SSPSTAT
+094.0   STAT_BF
+094.1   STAT_UA
+094.2   STAT_RW
+094.3   STAT_S
+094.4   STAT_P
+094.5   STAT_DA
+094.6   STAT_CKE
+094.7   STAT_SMP
+098.0   TX9D
+098     TXSTA
+098.1   TRMT
+098.2   BRGH
+098.4   SYNC
+098.5   TXEN
+098.6   TX9
+098.7   CSRC
+099     SPBRG
+09C.6   C1OUT
+09C.7   C2OUT
+09E     ADRESL
+09F     ADCON1
+09F.0   PCFG0
+09F.1   PCFG1
+09F.2   PCFG2
+09F.3   PCFG3
+09F.6   ADCS2
+09F.7   ADFM
+10C     EEDATA
+10D     EEADR
+10D-10E @WRITE_PROGRAM_MEMORY8.P1
+10D-10E @READ_PROGRAM_MEMORY8.P2
+10E     EEDATH
+10F     EEADRH
+18C.0   RD
+18C     EECON1
+18C.1   WR
+18C.2   WREN
+18C.3   WRERR
+18C.7   EEPGD
+18D     EECON2
+
+ROM Allocation:
+000004  @const943.call
+00000B  @const948.call
+000011  @delay_ms1
+000025  @I2C_WRITEU_129
+000035  Expander_Write
+000048  LCD_Write_Nibble
+000061  LCD_Cmd
+000071  LCD_Begin
+0000AB  Backlight
+0000B2  LCD_Goto
+0000D9  LCD_Out
+0000E9  @PSTRINGC7_932
+00013F  @cinit1
+00013F  MAIN
+000161  @cinit2
+
+Project Directory:
+    D:\LTVDK\Baitap\Code\vidieukhienbaocao\
+
+Project Files:
+    testlcdi2c.c                                            [16-Dec-25 22:09  CRC=E6C4AB8E]
+    C:\Program Files (x86)\PICC\Devices\16f877a.h           [06-May-22 15:52  CRC=4E256CC5]
+    C:\Program Files (x86)\PICC\Devices\def_877a.h          [21-Jan-25 14:15  CRC=2625AF95]
+    I2C_LCD.c                                               [16-Dec-25 16:13  CRC=E3A5527A]
+
+Source signature=225A6CDC
+Program memory checksum=0000
+Hex file CRC=CAEF
+
+Units:
+    D:\LTVDK\Baitap\Code\vidieukhienbaocao\testlcdi2c (main)
+
+Compiler Settings:
+    Processor:      PIC16F877A
+    Pointer Size:   16
+    ADC Range:      0-255
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+    Compile Mode:   CCS5
+
+Output Files:
+    XREF file:   testlcdi2c.xsym
+    Errors:      testlcdi2c.err
+    Ext Symbols: testlcdi2c.esym
+    INHX8:       testlcdi2c.hex
+    Symbols:     testlcdi2c.sym
+    List:        testlcdi2c.lst
+    Debug/COFF:  testlcdi2c.cof
+    Project:     testlcdi2c.ccspjt
+    Call Tree:   testlcdi2c.tre
+    Statistics:  testlcdi2c.STA

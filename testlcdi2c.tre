@@ -1,0 +1,71 @@
+ÀÄtestlcdi2c
+   ÀÄMAIN  0/81  Ram=1
+      ÃÄ@cinit1  (Inline)  Ram=0
+      ÃÄ@cinit2  (Inline)  Ram=0
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Begin  0/58  Ram=1
+      ³  ÃÄExpander_Write  0/19  Ram=2
+      ³  ³  ÃÄ@I2C_WRITEU_129  0/16  Ram=1
+      ³  ³  ÀÄ@I2C_WRITEU_129  0/16  Ram=1
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÃÄLCD_Write_Nibble  0/25  Ram=2
+      ³  ³  ³  ÃÄExpander_Write  0/19  Ram=2
+      ³  ³  ³  ³  ÀÄ*
+      ³  ³  ³  ÃÄExpander_Write  0/19  Ram=2
+      ³  ³  ³  ³  ÀÄ*
+      ³  ³  ³  ÀÄExpander_Write  0/19  Ram=2
+      ³  ³  ³     ÀÄ*
+      ³  ³  ÀÄLCD_Write_Nibble  0/25  Ram=2
+      ³  ³     ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÀÄ@delay_ms1  0/20  Ram=1
+      ÃÄBacklight  0/7  Ram=0
+      ³  ÀÄExpander_Write  0/19  Ram=2
+      ³     ÀÄ*
+      ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ÀÄ*
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÀÄLCD_Cmd  0/16  Ram=2
+      ³     ÀÄ*
+      ÃÄ@PSTRINGC7_932  0/86  Ram=4
+      ³  ÃÄLCD_Out  0/16  Ram=2
+      ³  ³  ÃÄLCD_Write_Nibble  0/25  Ram=2
+      ³  ³  ³  ÀÄ*
+      ³  ³  ÀÄLCD_Write_Nibble  0/25  Ram=2
+      ³  ³     ÀÄ*
+      ³  ÀÄLCD_Out  0/16  Ram=2
+      ³     ÀÄ*
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÀÄ@PSTRINGC7_932  0/86  Ram=4
+         ÀÄ*

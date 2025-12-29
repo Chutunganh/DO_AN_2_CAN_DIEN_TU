@@ -1,0 +1,182 @@
+#include <16f877a.h>
+//#include <def_877a.h>   // <-- B? DÒNG NÀY d? tránh duplicate #locate
+
+#device *=16 ADC=8
+#FUSES NOWDT, HS, NOPUT, NODEBUG, NOBROWNOUT, NOLVP, NOCPD, NOWRT
+#use delay(clock = 20000000)
+
+// ===== HX711 =====
+#define DT1        PIN_C0
+#define SCK        PIN_C1
+
+// ===== NÚT / POWER =====
+#define RESET_BTN  PIN_A0
+#define ONOFF_BTN  PIN_A1
+#define LCD_POWER  PIN_A2
+
+// ===== LCD I2C =====
+#use i2c(MASTER, SDA=PIN_C4, SCL=PIN_C3, stream=I2C_LCD, FAST=100000)
+#include <I2C_LCD.c>
+
+// ===== CÂN CH?NH =====
+#define CAL_WEIGHT_GRAMS 100.0
+float SCALE = 880.0;
+int1 system_on = TRUE;
+
+// -------- HX711 d?c 24-bit ----------
+signed int32 readCount(void) {
+   unsigned int32 data = 0;
+   int8 j;
+
+   output_low(SCK);
+
+   while (input(DT1));   // ch? HX711 s?n sàng
+
+   for (j = 0; j < 24; j++) {
+      output_high(SCK);
+      delay_us(1);
+      data = (data << 1) | (input(DT1) ? 1 : 0);
+      output_low(SCK);
+      delay_us(1);
+   }
+
+   // xung 25: gain 128
+   output_high(SCK); delay_us(1);
+   output_low(SCK);  delay_us(1);
+
+   // sign extend 24-bit
+   if (data & 0x800000) data |= 0xFF000000;
+
+   return (signed int32)data;
+}
+
+signed int32 readAverage(void) {
+   signed int32 sum = 0;
+   int k;
+   for (k = 0; k < 10; k++) {
+      sum += readCount();
+      delay_ms(10);
+   }
+   return sum / 10;
+}
+
+// ==== ch? nh? nút (dã s?a ki?u d? li?u) ====
+void wait_release(int16 p) {
+   while(!input(p)) { delay_ms(10); }
+   delay_ms(50);
+}
+
+void main() {
+   setup_adc_ports(NO_ANALOGS);
+   setup_adc(ADC_OFF);
+
+   set_tris_a(0x03);      // RA0,RA1 input; RA2 output
+   set_tris_c(0x19);      // <-- Ð?I 0b00011001 -> 0x19 (00011001)
+
+   output_high(LCD_POWER);
+   delay_ms(200);
+
+   LCD_Begin(0x4E);       // n?u LCD b?n 0x3F thì d?i 0x7E
+   delay_ms(100);
+
+   LCD_Goto(3,1); printf(LCD_Out, "Loading...");
+   delay_ms(800);
+
+   // 1) TARE
+   LCD_Goto(1,1); printf(LCD_Out, "De can = 0");
+   LCD_Goto(1,2); printf(LCD_Out, "Dang tare...");
+   delay_ms(500);
+
+   signed int32 offset = readAverage();
+
+   // 2) CALIB
+   LCD_Cmd(LCD_CLEAR);
+   LCD_Goto(1,1); printf(LCD_Out, "Dat %4.0f g", CAL_WEIGHT_GRAMS);
+   LCD_Goto(1,2); printf(LCD_Out, "Nhan RESET...");
+
+   while(input(RESET_BTN)) { delay_ms(20); }
+   delay_ms(30);
+   if(!input(RESET_BTN)) {
+      signed int32 rawCal = readAverage();
+      signed int32 deltaCal = rawCal - offset;
+      if(deltaCal < 1) deltaCal = 1;
+
+      SCALE = (float)deltaCal / CAL_WEIGHT_GRAMS;
+
+      wait_release(RESET_BTN);
+   }
+
+   LCD_Cmd(LCD_CLEAR);
+   LCD_Goto(1,1); printf(LCD_Out, "SCALE ok");
+   LCD_Goto(1,2); printf(LCD_Out, "%7.2f ct/g", SCALE);
+   delay_ms(1200);
+
+   LCD_Cmd(LCD_CLEAR);
+   LCD_Goto(1,1); printf(LCD_Out,"CAN NANG:");
+   float last_grams = -9999.0;
+
+   while(TRUE) {
+
+       // ON/OFF
+       if (!input(ONOFF_BTN)) {
+           delay_ms(30);
+           if (!input(ONOFF_BTN)) {
+               system_on = !system_on;
+
+               if (system_on) {
+                   output_high(LCD_POWER);
+                   delay_ms(150);
+                   LCD_Begin(0x4E);
+                   offset = readAverage();
+
+                   LCD_Cmd(LCD_CLEAR);
+                   LCD_Goto(1,1);
+                   printf(LCD_Out,"CAN NANG:");
+               } else {
+                   output_low(LCD_POWER);
+               }
+
+               wait_release(ONOFF_BTN);
+           }
+       }
+
+       if (!system_on) {
+           delay_ms(100);
+           continue;
+       }
+
+       // RESET = TARE
+       if (!input(RESET_BTN)) {
+           delay_ms(30);
+           if (!input(RESET_BTN)) {
+               offset = readAverage();
+               last_grams = -9999.0;
+               wait_release(RESET_BTN);
+           }
+       }
+
+       // 3) Ð?C CÂN
+       signed int32 raw = readAverage();
+       signed int32 delta = raw - offset;
+       if (delta < 0) delta = 0;
+
+       float grams = (float)delta / SCALE;
+
+       if (grams < 0.2) grams = 0.0;
+       grams = ((int)(grams * 10 + 0.5)) / 10.0;
+
+       float diff = grams - last_grams;
+       if (diff < 0) diff = -diff;
+
+       if (diff >= 0.1) {
+           LCD_Goto(1,2);
+           printf(LCD_Out,"                ");
+           LCD_Goto(1,2);
+           printf(LCD_Out,"%5.1f g", grams);
+           last_grams = grams;
+       }
+
+       delay_ms(300);
+   }
+}
+

@@ -1,0 +1,143 @@
+ÀÄhx711
+   ÀÄMAIN  1/642  Ram=50
+      ÃÄ@cinit1  (Inline)  Ram=0
+      ÃÄ@cinit2  (Inline)  Ram=0
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Begin  0/56  Ram=1
+      ³  ÃÄExpander_Write  0/19  Ram=2
+      ³  ³  ÃÄ@I2C_WRITEU_129  0/16  Ram=1
+      ³  ³  ÀÄ@I2C_WRITEU_129  0/16  Ram=1
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÃÄLCD_Write_Nibble  0/25  Ram=2
+      ³  ³  ³  ÃÄExpander_Write  0/19  Ram=2
+      ³  ³  ³  ³  ÀÄ*
+      ³  ³  ³  ÃÄExpander_Write  0/19  Ram=2
+      ³  ³  ³  ³  ÀÄ*
+      ³  ³  ³  ÀÄExpander_Write  0/19  Ram=2
+      ³  ³  ³     ÀÄ*
+      ³  ³  ÀÄLCD_Write_Nibble  0/25  Ram=2
+      ³  ³     ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÀÄ@delay_ms1  0/20  Ram=1
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÀÄLCD_Cmd  0/16  Ram=2
+      ³     ÀÄ*
+      ÃÄ@PSTRINGC7_932  0/86  Ram=4
+      ³  ÃÄLCD_Out  0/16  Ram=2
+      ³  ³  ÃÄLCD_Write_Nibble  0/25  Ram=2
+      ³  ³  ³  ÀÄ*
+      ³  ³  ÀÄLCD_Write_Nibble  0/25  Ram=2
+      ³  ³     ÀÄ*
+      ³  ÀÄLCD_Out  0/16  Ram=2
+      ³     ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÃÄ@PSTRINGC7_932  0/86  Ram=4
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÃÄ@PSTRINGC7_932  0/86  Ram=4
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÃÄ@PSTRINGC7_932  0/86  Ram=4
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÃÄLCD_Out  0/16  Ram=2
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÃÄLCD_Out  0/16  Ram=2
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄreadAverage  0/128  Ram=5
+      ³  ÃÄreadCount  (Inline)  Ram=6
+      ³  ÃÄ@delay_ms1  0/20  Ram=1
+      ³  ÀÄ@DIV3232  0/79  Ram=13
+      ÃÄLCD_Cmd  0/16  Ram=2
+      ³  ÀÄ*
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÃÄ@PSTRINGC7_932  0/86  Ram=4
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÃÄ@PSTRINGC7_932  0/86  Ram=4
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄLCD_Begin  0/56  Ram=1
+      ³  ÀÄ*
+      ÃÄreadAverage  0/128  Ram=5
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄreadAverage  0/128  Ram=5
+      ³  ÀÄ*
+      ÃÄ@delay_ms1  0/20  Ram=1
+      ÃÄreadAverage  0/128  Ram=5
+      ³  ÀÄ*
+      ÃÄ@SDTOF  0/48  Ram=5
+      ÃÄ@DIVFF  0/204  Ram=14
+      ÃÄ@ADDFF  0/323  Ram=16
+      ÃÄ@FLT  0/65  Ram=10
+      ÃÄLCD_Goto  0/39  Ram=3
+      ³  ÀÄ*
+      ÃÄ@PRINTF_L32D_932FPFPF  0/341  Ram=13
+      ³  ÃÄ@MULFF  (Inline)  Ram=13
+      ³  ÃÄ@FTOSD  (Inline)  Ram=5
+      ³  ÃÄ@DIV3232  0/79  Ram=13
+      ³  ÃÄLCD_Out  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄLCD_Out  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄLCD_Out  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÃÄLCD_Out  0/16  Ram=2
+      ³  ³  ÀÄ*
+      ³  ÀÄ@DIV3232  0/79  Ram=13
+      ÃÄLCD_Out  0/16  Ram=2
+      ³  ÀÄ*
+      ÃÄLCD_Out  0/16  Ram=2
+      ³  ÀÄ*
+      ÀÄ@delay_ms1  0/20  Ram=1

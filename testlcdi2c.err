@@ -1,0 +1,5 @@
+Compiling D:\LTVDK\Baitap\Code\vidieukhienbaocao\testlcdi2c on 16-Dec-25 at 22:09
+>>> Warning 238 "C:\Program Files (x86)\PICC\Devices\def_877a.h" Line 263(2,5): Duplicate #locate
+      Memory usage:   ROM=5%      RAM=3% - 6%
+      0 Errors,  1 Warnings.
+Build Successful.

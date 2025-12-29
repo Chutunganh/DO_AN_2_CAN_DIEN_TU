@@ -1,0 +1,66 @@
+#include <16F877A.h>
+
+#fuses XT, NOWDT, NOPROTECT, NOBROWNOUT, NOLVP, NOPUT, NOWRT, NODEBUG, NOCPD
+#use delay(clock = 4000000)
+
+#define DT1  PIN_C0
+#define SCK  PIN_C1
+
+#define use_portb_lcd TRUE
+#include <lcd.c>
+
+float SCALE = 36.0;
+
+signed int32 readCount(void) {
+  unsigned int32 data = 0;
+  int8 j;
+
+  // DT ph?i là INPUT -> tuy?t d?i không output_bit(DT1,...)
+  output_low(SCK);
+
+  // Ch? HX711 s?n sàng: DT xu?ng 0
+  while (input(DT1));
+
+  for (j = 0; j < 24; j++) {
+    output_high(SCK);
+    delay_us(1);
+    data = (data << 1) | (input(DT1) ? 1 : 0);
+    output_low(SCK);
+    delay_us(1);
+  }
+
+  // xung th? 25 d? ch?n gain 128 (Channel A)
+  output_high(SCK);
+  delay_us(1);
+  output_low(SCK);
+  delay_us(1);
+
+  // Sign extend 24-bit -> 32-bit signed
+  if (data & 0x800000) data |= 0xFF000000;
+
+  return (signed int32)data;
+}
+
+signed int32 readAverage(void) {
+  signed int32 sum = 0;
+  for (int k = 0; k < 20; k++) sum += readCount();
+  return sum / 20;
+}
+
+void main() {
+  lcd_init();
+  printf(lcd_putc, "\fDe can\ntrong..");
+  delay_ms(1500);
+
+  signed int32 offset = readAverage();
+
+  while (TRUE) {
+    signed int32 raw = readAverage();
+    float gram = (float)(raw - offset);   // có th? âm
+    if (gram < 0) gram = -gram;           // l?y tr? tuy?t d?i
+
+    printf(lcd_putc, "\f%6.2f g", gram / SCALE);
+    delay_ms(500);
+  }
+}
+

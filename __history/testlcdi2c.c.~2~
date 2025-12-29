@@ -1,0 +1,30 @@
+#include <16F877A.h>
+#fuses XT, NOWDT, NOPROTECT, NOBROWNOUT, NOLVP
+#use delay(clock = 2000000)  // 2 MHz
+#use i2c(master, sda=PIN_C4, scl=PIN_C3, stream=I2C_LCD, fast=100000)
+
+#include "I2C_LCD.c"   // Thu vi?n I2C LCD b?n dã cung c?p
+
+#define LCD_I2C_ADDR 0x4E   // Thay b?ng d?a ch? module c?a b?n (0x27 << 1)
+
+void main() {
+   // Kh?i t?o LCD
+   LCD_Begin(LCD_I2C_ADDR);
+
+   // Xóa màn hình
+   LCD_Cmd(LCD_CLEAR);
+
+   // Hi?n th? dòng 1
+   LCD_Goto(1,1);
+   printf(LCD_Out, "Hello World!");
+
+   // Hi?n th? dòng 2
+   LCD_Goto(1,2);
+   printf(LCD_Out, "I2C LCD Test");
+
+   while(TRUE) {
+      // Không c?n làm gì, ch? gi? ch? hi?n th?
+      delay_ms(1000);
+   }
+}
+

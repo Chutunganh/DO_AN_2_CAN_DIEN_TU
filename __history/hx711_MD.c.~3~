@@ -1,0 +1,62 @@
+#include <16F877A.h>
+#fuses HS, NOWDT, NOPUT, NODEBUG, NOBROWNOUT, NOLVP, NOCPD, NOWRT, NOPROTECT
+#use delay(clock=20000000)
+
+#define DT1  PIN_C0
+#define SCK  PIN_C1
+
+#use i2c(MASTER, SDA=PIN_C4, SCL=PIN_C3, stream=I2C_LCD, FAST=100000)
+#include <I2C_LCD.c>   // thu vi?n LCD I2C c?a b?n
+
+float SCALE = 36.0;    // t?m th?i, s? ph?i cân ch?nh l?i
+
+signed int32 hx711_read_raw() {
+   unsigned int32 data = 0;
+   int8 i;
+
+   output_low(SCK);
+
+   // ch? HX711 s?n sàng (DOUT xu?ng 0)
+   while(input(DT1));
+
+   for(i=0;i<24;i++){
+      output_high(SCK); delay_us(1);
+      data = (data << 1) | (input(DT1) ? 1 : 0);
+      output_low(SCK);  delay_us(1);
+   }
+
+   // xung th? 25: ch?n gain 128 (Channel A)
+   output_high(SCK); delay_us(1);
+   output_low(SCK);  delay_us(1);
+
+   // sign extend 24-bit -> 32-bit signed
+   if(data & 0x800000) data |= 0xFF000000;
+
+   return (signed int32)data;
+}
+
+signed int32 hx711_read_avg(int n){
+   signed int32 sum = 0;
+   for(int i=0;i<n;i++) sum += hx711_read_raw();
+   return sum / n;
+}
+
+void main() {
+   lcd_init();
+   printf(lcd_putc, "\fHX711 READY");
+   delay_ms(800);
+
+   signed int32 offset = hx711_read_avg(20);
+
+   while(TRUE){
+      signed int32 raw = hx711_read_avg(10);
+      float gram = (float)(raw - offset) / SCALE;
+
+      // debug: n?u mu?n xem raw d? bi?t có thay d?i không
+      // printf(lcd_putc, "\fRAW:%ld", raw);
+
+      printf(lcd_putc, "\f%7.2f g", gram);
+      delay_ms(300);
+   }
+}
+

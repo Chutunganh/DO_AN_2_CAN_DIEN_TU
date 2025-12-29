@@ -1,0 +1,196 @@
+004-005 @WRITE_PROGRAM_MEMORY8.P1
+004-005 @READ_PROGRAM_MEMORY8.P2
+008     PSP_DATA
+015     CCP_1_LOW
+015     CCP_1
+016     CCP_1_HIGH
+01B     CCP_2_LOW
+01B     CCP_2
+01C     CCP_2_HIGH
+020     @TRIS_C
+021.0   RS
+022     i2c_addr
+023     backlight_val
+024-027 SCALE
+028-02B offset
+02C-02D @sprintf_string
+02E-031 MAIN.raw
+032-035 MAIN.gram
+036-039 @FLT.P1
+036     @PSTRINGCN7_731.P2
+036     hx711_read_avg.n
+036-039 @PRINTF_L32D_731FPFPF.P1
+036-039 @PRINTF_L32D_731.P2
+036     lcd_init.addr
+036-039 @SDTOF.P1
+036     MAIN.@SCRATCH1
+036     @PSTRINGC7_731.@SCRATCH1
+037-03A hx711_read_avg.sum
+037     LCD_Begin._i2c_addr
+037     i2c_probe_8bit.addr8
+037     MAIN.@SCRATCH2
+037     @PSTRINGC7_731.@SCRATCH2
+037     @PSTRINGCN7_731.@SCRATCH1
+038.0   i2c_probe_8bit.nack
+038     MAIN.@SCRATCH3
+038     @PSTRINGC7_731.@SCRATCH3
+038     @PSTRINGCN7_731.@SCRATCH2
+039     i2c_probe_8bit.@SCRATCH1
+039     MAIN.@SCRATCH4
+039     @PSTRINGC7_731.@SCRATCH4
+039     @PSTRINGCN7_731.@SCRATCH3
+03A-03D @FLT.P1
+03A-03D @DIVFF.P2
+03A     @PRINTF_L32D_731FPFPF.P3
+03A     @SDTOF.@SCRATCH1
+03A     @PSTRINGCN7_731.@SCRATCH4
+03A     @PRINTF_L32D_731.@SCRATCH1
+03B     hx711_read_avg.i
+03B     @PRINTF_L32D_731FPFPF.@SCRATCH1
+03B     @PRINTF_L32D_731.@SCRATCH2
+03C-03F hx711_read_raw.data
+03C-03F @DIVS3232.P1
+03C     @PRINTF_L32D_731FPFPF.@SCRATCH2
+03C     @PRINTF_L32D_731.@SCRATCH3
+03D     @PRINTF_L32D_731FPFPF.@SCRATCH3
+03D     @PRINTF_L32D_731.@SCRATCH4
+03E-041 @DIVFF.P1
+03E     @FLT.@SCRATCH1
+03E     @PRINTF_L32D_731FPFPF.@SCRATCH4
+03E     @PRINTF_L32D_731.@SCRATCH5
+03F     @FLT.@SCRATCH2
+03F     @PRINTF_L32D_731FPFPF.@SCRATCH5
+03F     @PRINTF_L32D_731.@SCRATCH6
+040     hx711_read_raw.i
+040-043 @DIVS3232.P1
+040     @PRINTF_L32D_731FPFPF.@SCRATCH6
+040     @PRINTF_L32D_731.@SCRATCH7
+041-042 hx711_read_raw.t
+041     @PRINTF_L32D_731FPFPF.@SCRATCH7
+041     @PRINTF_L32D_731.@SCRATCH8
+042     @DIVFF.@SCRATCH1
+042     @PRINTF_L32D_731FPFPF.@SCRATCH8
+043-046 @FTOSD.P1
+043-046 @DIV3232.P2
+043     lcd_putc.c
+043-046 @MULFF.P1
+043     hx711_read_raw.@SCRATCH1
+043     @DIVFF.@SCRATCH2
+044     @delay_ms1.P1
+044     LCD_Goto.col
+044     LCD_Out.LCD_Char
+044     hx711_read_raw.@SCRATCH2
+044     @DIVS3232.@SCRATCH1
+044     @DIVFF.@SCRATCH3
+045     LCD_Goto.row
+045     LCD_Out.@SCRATCH1
+045     hx711_read_raw.@SCRATCH3
+045     @DIVS3232.@SCRATCH2
+045     @DIVFF.@SCRATCH4
+046     LCD_Goto.@SCRATCH1
+046     hx711_read_raw.@SCRATCH4
+046     @DIVS3232.@SCRATCH3
+046     @DIVFF.@SCRATCH5
+047-04A @DIV3232.P1
+047     LCD_Cmd.Command
+047-04A @MULFF.P1
+047     hx711_read_raw.@SCRATCH5
+047     @DIVS3232.@SCRATCH4
+047     @DIVFF.@SCRATCH6
+047     @FTOSD.@SCRATCH1
+048     LCD_Cmd.@SCRATCH1
+048     @DIVS3232.@SCRATCH5
+049     LCD_Write_Nibble.n
+049     @DIVS3232.@SCRATCH6
+04A     LCD_Write_Nibble.@SCRATCH1
+04B     Expander_Write.value
+04B     @MULFF.@SCRATCH1
+04B     @DIV3232.@SCRATCH1
+04C     Expander_Write.@SCRATCH1
+04C     @MULFF.@SCRATCH2
+04C     @DIV3232.@SCRATCH2
+04D     @I2C_WRITEU_129.P1
+04D     @MULFF.@SCRATCH3
+04D     @DIV3232.@SCRATCH3
+04E     @MULFF.@SCRATCH4
+04E     @DIV3232.@SCRATCH4
+04F     @MULFF.@SCRATCH5
+04F     @DIV3232.@SCRATCH5
+077     @SCRATCH
+078     @SCRATCH
+078     _RETURN_
+079     @SCRATCH
+07A     @SCRATCH
+09C.6   C1OUT
+09C.7   C2OUT
+10D-10E @READ_PROGRAM_MEMORY8.P1
+10D-10E @WRITE_PROGRAM_MEMORY8.P2
+
+ROM Allocation:
+000004  @const747.call
+000012  @const752.call
+00001D  @const754.call
+00002B  @const764.call
+000034  @I2C_WRITEU_129
+000044  i2c_probe_8bit
+00005A  Expander_Write
+00006D  @delay_ms1
+000082  LCD_Write_Nibble
+00009A  LCD_Cmd
+0000AA  lcd_init
+0000BE  LCD_Begin
+0000F8  LCD_Goto
+00011F  lcd_putc
+00013E  LCD_Out
+00014E  @PSTRINGC7_731
+0001A4  hx711_read_avg
+0001AD  hx711_read_raw
+00025B  @DIVS3232
+0002D5  @SDTOF
+000305  @DIVFF
+0003D1  @FLT
+000412  @DIV3232
+000461  @PRINTF_L32D_731FPFPF
+000475  @MULFF
+0004FB  @FTOSD
+0005B6  @PSTRINGCN7_731
+00060F  @PRINTF_L32D_731
+00068F  @cinit1
+00068F  MAIN
+0006BB  @cinit2
+
+Project Directory:
+    D:\LTVDK\Baitap\Code\vidieukhienbaocao\
+
+Project Files:
+    hx711_MD.c                                              [20-Dec-25 13:38  CRC=7DDDF7D2]
+    C:\Program Files (x86)\PICC\Devices\16F877A.h           [06-May-22 15:52  CRC=4E256CC5]
+    I2C_LCD.c                                               [16-Dec-25 16:13  CRC=E3A5527A]
+
+Source signature=934E098B
+Program memory checksum=0000
+Hex file CRC=37E6
+
+Units:
+    D:\LTVDK\Baitap\Code\vidieukhienbaocao\hx711_MD (main)
+
+Compiler Settings:
+    Processor:      PIC16F877A
+    Pointer Size:   16
+    ADC Range:      0-255
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+    Compile Mode:   CCS5
+
+Output Files:
+    XREF file:   hx711_MD.xsym
+    Errors:      hx711_MD.err
+    Ext Symbols: hx711_MD.esym
+    INHX8:       hx711_MD.hex
+    Symbols:     hx711_MD.sym
+    List:        hx711_MD.lst
+    Debug/COFF:  hx711_MD.cof
+    Project:     hx711_MD.ccspjt
+    Call Tree:   hx711_MD.tre
+    Statistics:  hx711_MD.STA

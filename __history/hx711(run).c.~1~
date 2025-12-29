@@ -1,0 +1,138 @@
+#include <16f877a.h>
+#device *=16 ADC=8
+#FUSES NOWDT, HS, NOPUT, NODEBUG, NOBROWNOUT, NOLVP, NOCPD, NOWRT
+#use delay(clock = 20MHz)
+
+// ================== C?U HÌNH CHÂN ==================
+#define DT1        PIN_C0
+#define SCK        PIN_C1
+#define RESET_BTN  PIN_A0     // Nút TARE
+#define LCD_POWER  PIN_A2     // C?p ngu?n LCD (qua transistor)
+
+// ================== I2C LCD ==================
+#use i2c(MASTER, SDA=PIN_C4, SCL=PIN_C3, stream=I2C_LCD, FAST)
+#include <I2C_LCD.c>
+
+// ================== H? S? CÂN (ÐÃ S?A) ==================
+float SCALE = 220.0;    // CHU?N CHO LOADCELL 10kg
+
+unsigned int32 offset = 0;   // Giá tr? tare
+
+// =======================================================
+// ================== HX711 READ 24 BIT ==================
+// =======================================================
+unsigned int32 readCount(void) {
+   unsigned int32 data = 0;
+   unsigned int8 j;
+   unsigned int16 timeout = 0;
+
+   output_low(SCK);
+
+   while (input(DT1) && timeout < 60000) {
+      timeout++;
+      delay_us(1);
+   }
+
+   if (timeout >= 60000) return 0;
+
+   for (j = 0; j < 24; j++) {
+      output_high(SCK);
+      delay_us(1);
+      data <<= 1;
+      output_low(SCK);
+      delay_us(1);
+      if (input(DT1)) data++;
+   }
+
+   // Xung th? 25 (gain 128)
+   output_high(SCK);
+   delay_us(1);
+   data ^= 0x800000;
+   output_low(SCK);
+
+   return data;
+}
+
+// ================== L?Y GIÁ TR? TRUNG BÌNH ==================
+unsigned int32 readAverage(void) {
+   unsigned int32 sum = 0;
+   int i;
+   for (i = 0; i < 20; i++) {
+      sum += readCount();
+   }
+   return sum / 20;
+}
+
+// =======================================================
+// ========================== MAIN ========================
+// =======================================================
+void main() {
+
+   setup_adc_ports(NO_ANALOGS);
+   setup_adc(ADC_OFF);
+   set_tris_a(0x01);    // A0 input, A2 output
+
+   // B?T LCD
+   output_high(LCD_POWER);
+   delay_ms(200);
+
+   LCD_Begin(0x4E);
+   delay_ms(100);
+
+   LCD_Goto(1,1);
+   printf(LCD_Out, "Khoi dong...");
+   delay_ms(1000);
+
+   // TARE T? Ð?NG
+   offset = readAverage();
+
+   LCD_Goto(1,1);
+   printf(LCD_Out, "San sang!");
+   delay_ms(500);
+
+   float last_grams = -999;
+
+   while(TRUE) {
+
+      // ================== NÚT TARE ==================
+      if (!input(RESET_BTN)) {
+         delay_ms(20);
+         if (!input(RESET_BTN)) {
+            LCD_Goto(1,2);
+            printf(LCD_Out, "Dang Tare...");
+
+            offset = readAverage();
+            last_grams = -999;
+
+            while (!input(RESET_BTN));
+         }
+      }
+
+      // ================== Ð?C CÂN ==================
+      unsigned int32 raw = readAverage();
+      signed int32 delta = (signed int32)raw - (signed int32)offset;
+
+      if (delta < 0 && delta > -1000) delta = 0;
+
+      float grams = (float)delta / SCALE;
+
+      if (grams > -1 && grams < 1) grams = 0;
+
+      float diff = grams - last_grams;
+      if (diff < 0) diff = -diff;
+
+      if (diff >= 0.5 || (grams == 0 && last_grams != 0)) {
+
+         LCD_Goto(1,1);
+         printf(LCD_Out, "Raw:%lu     ", raw);
+
+         LCD_Goto(1,2);
+         printf(LCD_Out, "Can:%5.1f g ", grams);
+
+         last_grams = grams;
+      }
+
+      delay_ms(200);
+   }
+}
+

@@ -1,0 +1,5 @@
+Compiling D:\LTVDK\Baitap\Code\vidieukhienbaocao\hx711 on 21-Dec-25 at 10:18
+>>> Warning 238 "C:\Program Files (x86)\PICC\Devices\def_877a.h" Line 263(2,5): Duplicate #locate
+      Memory usage:   ROM=26%      RAM=18% - 24%
+      0 Errors,  1 Warnings.
+Build Successful.

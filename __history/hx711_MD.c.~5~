@@ -1,0 +1,132 @@
+#include <16F877A.h>
+
+// ===== CH?N DAO Ð?NG (CH?N 1 KH?I ÐÚNG V?I TH?CH ANH C?A B?N) =====
+// --- N?u th?ch anh 4MHz (nhu so d? b?n g?i) ---
+#fuses XT, NOWDT, NOPROTECT, NOBROWNOUT, NOLVP, NOPUT, NOWRT, NODEBUG, NOCPD
+#use delay(clock=4000000)
+
+// --- N?u th?ch anh 20MHz thì comment block trên và dùng block du?i ---
+//#fuses HS, NOWDT, NOPROTECT, NOBROWNOUT, NOLVP, NOPUT, NOWRT, NODEBUG, NOCPD
+//#use delay(clock=20000000)
+
+// ===== HX711 =====
+#define DT1   PIN_C0
+#define SCK   PIN_C1
+
+// ===== I2C LCD (PCF8574) =====
+#use i2c(MASTER, SDA=PIN_C4, SCL=PIN_C3, stream=I2C_LCD, FAST=100000)
+#include <I2C_LCD.c>   // thu vi?n b?n g?i (LCD_Begin, LCD_Out, LCD_Goto, LCD_Cmd,...)
+
+// ===== THAM S? CÂN (CH?NH L?I SAU) =====
+float SCALE = 36.0;     // h? s? scale (b?n s? calib l?i)
+signed int32 OFFSET = 0;
+
+// =====================================================
+//  I2C PROBE: t? dò d?a ch? PCF8574 (0x27 ho?c 0x3F)
+//  Thu vi?n b?n dùng nh?n d?a ch? d?ng 8-bit write:
+//   0x27 -> 0x4E, 0x3F -> 0x7E
+// =====================================================
+int1 i2c_probe_8bit(unsigned int8 addr8) {
+   int1 nack;
+   I2C_Start(I2C_LCD);
+   nack = I2C_Write(I2C_LCD, addr8);   // CCS: return 0 n?u ACK, 1 n?u NACK
+   I2C_Stop(I2C_LCD);
+   return (nack == 0);                // TRUE n?u có ACK
+}
+
+// ===== WRAPPER: d? dùng printf(lcd_putc, ...) nhu lcd.c =====
+void lcd_init() {
+   unsigned int8 addr = 0x4E; // m?c d?nh 0x27
+
+   if(i2c_probe_8bit(0x4E)) addr = 0x4E;
+   else if(i2c_probe_8bit(0x7E)) addr = 0x7E;
+
+   LCD_Begin(addr);
+}
+
+void lcd_putc(char c) {
+   switch(c) {
+      case '\f': LCD_Cmd(LCD_CLEAR); delay_ms(2); break;
+      case '\n': LCD_Goto(1,2); break;
+      case '\r': LCD_Goto(1,1); break;
+      default:   LCD_Out((unsigned int8)c); break;
+   }
+}
+
+// =====================================================
+//  HX711 READ
+// =====================================================
+signed int32 hx711_read_raw() {
+   unsigned int32 data = 0;
+   int8 i;
+
+   output_low(SCK);
+
+   // Ch? HX711 s?n sàng: DT xu?ng 0
+   // Có timeout d? tránh treo n?u chua n?i HX711
+   unsigned int16 t = 0;
+   while(input(DT1)) {
+      delay_us(10);
+      if(++t > 60000) { // ~600ms (tu? clock)
+         return 0;      // tr? 0 n?u timeout
+      }
+   }
+
+   for(i=0; i<24; i++) {
+      output_high(SCK);
+      delay_us(1);
+      data = (data << 1) | (input(DT1) ? 1 : 0);
+      output_low(SCK);
+      delay_us(1);
+   }
+
+   // Xung th? 25 ch?n Gain 128 (Channel A)
+   output_high(SCK); delay_us(1);
+   output_low(SCK);  delay_us(1);
+
+   // sign extend 24-bit -> 32-bit signed
+   if(data & 0x800000) data |= 0xFF000000;
+
+   return (signed int32)data;
+}
+
+signed int32 hx711_read_avg(int n) {
+   signed int32 sum = 0;
+   for(int i=0; i<n; i++) sum += hx711_read_raw();
+   return sum / n;
+}
+
+// =====================================================
+//  MAIN
+// =====================================================
+void main() {
+   lcd_init();
+   printf(lcd_putc, "\fHX711 + LCD\nDang khoi tao");
+   delay_ms(1200);
+
+   // L?y offset (tare)
+   printf(lcd_putc, "\fDang tare...\nXin doi");
+   OFFSET = hx711_read_avg(20);
+   delay_ms(400);
+
+   while(TRUE) {
+      signed int32 raw = hx711_read_avg(10);
+
+      // N?u timeout tr? 0 liên t?c -> báo l?i don gi?n
+      if(raw == 0 && input(DT1)) {
+         printf(lcd_putc, "\fLOI HX711\nKiem tra DT/SCK");
+         delay_ms(500);
+         continue;
+      }
+
+      float gram = (float)(raw - OFFSET) / SCALE;
+      if(gram < 0) gram = -gram;
+
+      // Dòng 1: s? gram
+      // Dòng 2: raw d? debug xem có thay d?i không
+      printf(lcd_putc, "\f%7.2f g\nRAW:%ld", gram, raw);
+
+      delay_ms(300);
+   }
+}
+

@@ -1,0 +1,125 @@
+#include <16F877A.h>
+#fuses XT, NOWDT, NOPROTECT, NOBROWNOUT, NOLVP, NOPUT, NOWRT, NODEBUG, NOCPD
+#use delay(clock = 2MHz)
+
+#define DT1 pin_c0
+#define SCK pin_c1
+#define RESET_BTN PIN_A0
+#define ONOFF_BTN PIN_A1
+#define LCD_POWER PIN_A2
+
+#use i2c(Master, SDA=PIN_C4, SCL=PIN_C3, Fast=100000, Stream=I2C_LCD)
+#include "I2C_LCD.c"
+
+float SCALE = 36000;
+int1 system_on = TRUE;
+
+unsigned int32 readCount(void) {
+   unsigned int32 data = 0;
+   unsigned int8 i;
+
+   output_high(SCK);
+   output_high(DT1);
+
+   while(input(DT1));
+
+   for(i=0;i<24;i++){
+      output_high(SCK);
+      data = data << 1;
+      output_low(SCK);
+      if(input(DT1)) data++;
+   }
+
+   output_high(SCK);
+   data ^= 0x800000;
+   output_low(SCK);
+
+   return data;
+}
+
+unsigned int32 readAverage() {
+   unsigned int32 s = 0;
+   for(int i=0;i<10;i++)
+      s += readCount();
+   return s/10;
+}
+
+void main() {
+
+   set_tris_a(0x03);
+
+   output_high(LCD_POWER);
+   delay_ms(100);
+   lcd_init_i2c();
+
+   lcd_cmd(0x01);
+   delay_ms(300);
+
+   // loading
+   lcd_gotoxy_i2c(3,1); printf(lcd_putc_i2c, "Loading...");
+   delay_ms(600);
+
+   // tên b?n
+   lcd_clear();
+   lcd_gotoxy_i2c(3,1);
+   printf(lcd_putc_i2c, "Chu Tung Anh");
+   delay_ms(700);
+
+   lcd_gotoxy_i2c(3,2);
+   printf(lcd_putc_i2c, "Can dien tu");
+   delay_ms(1500);
+
+   unsigned int32 offset = readAverage();
+
+   lcd_clear();
+   lcd_gotoxy_i2c(3,1);
+   printf(lcd_putc_i2c, "San Sang!");
+   delay_ms(800);
+
+   while(TRUE)
+   {
+      // nút on/off
+      if(!input(ONOFF_BTN)){
+         delay_ms(20);
+         if(!input(ONOFF_BTN)){
+            system_on = !system_on;
+
+            if(system_on){
+               output_high(LCD_POWER);
+               delay_ms(100);
+               lcd_init_i2c();
+               offset = readAverage();
+            } else {
+               lcd_clear();
+               output_low(LCD_POWER);
+            }
+
+            while(!input(ONOFF_BTN));
+         }
+      }
+
+      if(!system_on) continue;
+
+      // reset nút
+      if(!input(RESET_BTN)){
+         delay_ms(20);
+         if(!input(RESET_BTN)){
+            offset = readAverage();
+            while(!input(RESET_BTN));
+         }
+      }
+
+      unsigned int32 r = readAverage();
+      signed int32 d = (signed int32)r - (signed int32)offset;
+      if(d < 0) d = 0;
+
+      float g = (float)d / SCALE;
+
+      lcd_clear();
+      lcd_gotoxy_i2c(1,1);
+      printf(lcd_putc_i2c, "%.0f g", g);
+
+      delay_ms(100);
+   }
+}
+

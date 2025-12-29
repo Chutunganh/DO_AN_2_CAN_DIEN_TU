@@ -1,0 +1,23 @@
+[PROJECT]
+Target=hx711(run).hex
+Processor_Text=PIC16F877A
+CCSVersion=5.109
+Compiler=PCM
+[Target Data]
+FileList=hx711(run).c
+[hx711(run).c]
+Type=4
+[mru-list]
+1=hx711(run).c
+[Units]
+Count=1
+1=hx711(run) (main)
+
+[defines]
+buildcount=1
+
+[ProjectLog]
+Days=1
+D1=29-12-2025
+D1_L=1
+D1_L1=[62270]Project Closed.

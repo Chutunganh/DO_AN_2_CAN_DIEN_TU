@@ -1,0 +1,221 @@
+#include <16f877a.h>
+#include <def_877a.h>
+#device *=16 ADC=8
+#FUSES NOWDT, HS, NOPUT, NODEBUG, NOBROWNOUT, NOLVP, NOCPD, NOWRT
+#use delay(clock = 20MHz)
+
+#define DT1        PIN_C0
+#define SCK        PIN_C1
+#define RESET_BTN  PIN_A0
+#define ONOFF_BTN  PIN_A1
+#define LCD_POWER  PIN_A2
+
+#use i2c(MASTER, SDA=PIN_C4, SCL=PIN_C3, stream=I2C_LCD, FAST)
+#include <I2C_LCD.c>
+
+float SCALE = 880.0;   
+int1 system_on = TRUE;
+
+// -------- HX711 d?c 24-bit ----------
+unsigned int32 readCount(void) {
+   unsigned int32 data = 0;
+   unsigned int8 j;
+   output_bit(DT1, 1);
+   output_bit(SCK, 0);
+   while (input(DT1));
+   for (j = 0; j < 24; j++) {
+      output_bit(SCK, 1);
+      data = data << 1;
+      output_bit(SCK, 0);
+      if (input(DT1)) data++;
+   }
+   output_bit(SCK, 1);
+   data = data ^ 0x800000;
+   output_bit(SCK, 0);
+   return data;
+}
+
+int32 readAverage(void) {
+   unsigned int32 sum = 0;
+   int k;
+   for (k = 0; k < 10; k++) {
+      sum += readCount();
+      delay_ms(10);
+   }
+   return sum / 10;
+}
+// -------------------------------------
+
+void main() {
+   setup_adc_ports(NO_ANALOGS);
+   setup_adc(ADC_OFF);
+   set_tris_a(0x03);
+   
+   output_high(LCD_POWER);
+   delay_ms(200);
+   LCD_Begin(0x4E);
+   delay_ms(100);
+   
+   LCD_Goto(3,1); printf(LCD_Out, "Loading");
+   delay_ms(400);
+   LCD_Goto(3,1); printf(LCD_Out, "Loading.");
+   delay_ms(400);
+   LCD_Goto(3,1); printf(LCD_Out, "Loading..");
+   delay_ms(400);
+   LCD_Goto(3,1); printf(LCD_Out, "Loading...");
+   delay_ms(400);
+
+   {
+      char name1[] = "Chu Tung Anh";
+      int8 i;
+      LCD_Goto(3,1);
+      for (i = 0; name1[i] != '\0'; i++) {
+         LCD_Out(name1[i]);
+         delay_ms(120);
+      }
+      delay_ms(500);
+
+      char name2[] = "Can dien tu";
+      LCD_Goto(3,2);
+      for (i = 0; name2[i] != '\0'; i++) {
+         LCD_Out(name2[i]);
+         delay_ms(120);
+      }
+      delay_ms(1000);
+   }
+
+   // ===== S?A 1: CH? ?N Ð?NH + Ð?C OFFSET NHI?U L?N =====
+   delay_ms(500);  // Ch? HX711 ?n d?nh
+   
+   unsigned int32 offset_sum = 0;
+   int8 k;
+   for (k = 0; k < 20; k++) {  // Ð?c 20 l?n
+      offset_sum += readAverage();
+      delay_ms(50);
+   }
+   unsigned int32 offset = offset_sum / 20;  // L?y trung bình
+   // ======================================================
+
+   LCD_Goto(3,1); 
+   printf(LCD_Out, "                  "); 
+   LCD_Goto(3,2); 
+   printf(LCD_Out, "                  "); 
+   LCD_Goto(4,1); 
+   printf(LCD_Out, "San sang!");
+   delay_ms(1000);
+   LCD_Goto(4,1);
+   printf(LCD_Out,"CAN NANG:");
+   
+   // ===== S?A 2: HI?N TH? 0.0g NGAY =====
+   LCD_Goto(4,2);
+   printf(LCD_Out," 0.0 g");
+   // ======================================
+   
+   float last_grams = 0.0;
+   int8 stable_count = 0;  // Ð?m s? l?n giá tr? ?n d?nh
+
+   while(TRUE) {
+   
+       /* ===== NÚT ON/OFF ===== */
+       if (!input(ONOFF_BTN)) {
+           delay_ms(30);
+           if (!input(ONOFF_BTN)) {
+               system_on = !system_on;
+   
+               if (system_on) {
+                   output_high(LCD_POWER);
+                   delay_ms(150);
+                   LCD_Begin(0x4E);
+                   
+                   delay_ms(500);
+                   offset_sum = 0;
+                   for (k = 0; k < 20; k++) {
+                      offset_sum += readAverage();
+                      delay_ms(50);
+                   }
+                   offset = offset_sum / 20;
+   
+                   LCD_Goto(4,1);
+                   printf(LCD_Out,"CAN NANG:");
+                   LCD_Goto(4,2);
+                   printf(LCD_Out," 0.0 g");
+                   last_grams = 0.0;
+                   stable_count = 0;
+               } else {
+                   output_low(LCD_POWER);
+               }
+   
+               while (!input(ONOFF_BTN));
+               delay_ms(50);
+           }
+       }
+   
+       if (!system_on) {
+           delay_ms(100);
+           continue;
+       }
+   
+       /* ===== NÚT RESET (TARE) ===== */
+       if (!input(RESET_BTN)) {
+           delay_ms(30);
+           if (!input(RESET_BTN)) {
+               delay_ms(300);
+               offset_sum = 0;
+               for (k = 0; k < 20; k++) {
+                  offset_sum += readAverage();
+                  delay_ms(50);
+               }
+               offset = offset_sum / 20;
+               
+               LCD_Goto(4,2);
+               printf(LCD_Out,"       ");
+               LCD_Goto(4,2);
+               printf(LCD_Out," 0.0 g");
+               last_grams = 0.0;
+               stable_count = 0;
+               
+               while (!input(RESET_BTN));
+               delay_ms(50);
+           }
+       }
+   
+       /* ===== Ð?C CÂN ===== */
+       unsigned int32 raw = readAverage();
+       signed int32 delta = (signed int32)raw - (signed int32)offset;
+       if (delta < 0) delta = 0;
+   
+       float grams = (float)delta / SCALE;
+   
+       /* ===== S?A 3: CH?NG NH?Y S? =====
+          - Tang dead zone lên 1.0g
+          - Ph?i ?n d?nh 3 l?n liên t?c m?i hi?n th?
+          - Ngu?ng thay d?i tang lên 0.5g
+       */
+       if (grams < 1.0) grams = 0.0;  // Dead zone l?n hon
+       
+       grams = ((int)(grams * 10 + 0.5)) / 10.0;  // Làm tròn 0.1g
+   
+       float diff = grams - last_grams;
+       if (diff < 0) diff = -diff;
+   
+       // Ph?i thay d?i >= 0.5g m?i c?p nh?t
+       if (diff >= 0.5) {
+           stable_count++;
+           
+           // Ph?i ?n d?nh 3 l?n liên t?c
+           if (stable_count >= 3) {
+               LCD_Goto(4,2);
+               printf(LCD_Out,"       ");
+               LCD_Goto(4,2);
+               printf(LCD_Out,"%5.1f g", grams);
+               last_grams = grams;
+               stable_count = 0;
+           }
+       } else {
+           stable_count = 0;  // Reset n?u không ?n d?nh
+       }
+       // =====================================
+   
+       delay_ms(300);
+   }
+}
